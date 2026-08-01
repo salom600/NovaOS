@@ -1,0 +1,18 @@
+[Unit]
+Description=NovaOS - First-Boot Setup (one-shot)
+DefaultDependencies=no
+Conflicts=shutdown.target
+After=local-fs.target systemd-journald.service NetworkManager.service
+Before=multi-user.target display-manager.service
+ConditionPathExists=!/var/lib/novaos/.first-boot-complete
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/novaos-first-boot.sh
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target

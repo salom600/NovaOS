@@ -1,0 +1,19 @@
+[General]
+ColorScheme=NovaOS Crystal
+LookAndFeelPackage=com.novaos.desktop
+widgetStyle=kvantum
+
+[KDE]
+LookAndFeelPackage=com.novaos.desktop
+widgetStyle=kvantum
+ColorScheme=NovaOS Crystal
+
+[Icons]
+Theme=NovaOS-Crystal
+
+[KFileDialog Settings]
+Recently Used=
+Detail View Icon Size=48
+
+[WM]
+activeFont=Inter,13,-1,5,600,0,0,0,0,0,0,0,0,0,0,1

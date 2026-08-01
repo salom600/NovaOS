@@ -1,0 +1,301 @@
+name: build-novaos-iso
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Profile (novaos / novaos-minimal)'
+        required: false
+        default: 'novaos'
+      debug:
+        description: 'Enable debug SSH'
+        required: false
+        default: 'false'
+        type: choice
+        options: [ 'true', 'false' ]
+  schedule:
+    # Weekly rebuild on Sunday 02:00 UTC to catch new kernels and security updates
+    - cron: '0 2 * * 0'
+
+permissions:
+  contents: write     # required for creating releases
+  packages: write
+  actions: write      # required for triggering auto-repair workflow
+
+concurrency:
+  group: build-novaos-iso-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  ARCHISO_PROFILE: ${{ github.event.inputs.profile || 'novaos' }}
+  ARTIFACT_NAME: NovaOS-x86_64
+  ARTIFACT_DIR: out
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    outputs:
+      iso_name: ${{ steps.iso-info.outputs.iso_name }}
+      iso_path: ${{ steps.iso-info.outputs.iso_path }}
+      iso_sha256: ${{ steps.iso-info.outputs.iso_sha256 }}
+      build_status: ${{ steps.set-status.outputs.build_status }}
+      build_log_url: ${{ steps.set-status.outputs.build_log_url }}
+
+    steps:
+      - name: Checkout NovaOS
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Free disk space
+        run: |
+          set -e
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/.ghcup /usr/local/share/boost /usr/local/share/vcpkg \
+                      /opt/hostedtoolcache 2>/dev/null || true
+          sudo apt-get clean
+          df -h /
+
+      - name: Install archiso dependencies
+        run: |
+          set -e
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            ca-certificates curl wget git gnupg squashfs-tools dosfstools mtools xorriso \
+            grub-pc-bin grub-efi-amd64-bin shim-signed mtools zstd xz-utils
+          # Sanity
+          df -h /
+
+      - name: Pull Arch Docker image
+        run: |
+          docker pull archlinux:latest
+          docker images
+
+      - name: Build NovaOS ISO (inside archlinux container)
+        id: build-iso
+        run: |
+          set -euo pipefail
+
+          # Make absolute paths
+          REPO_DIR="$GITHUB_WORKSPACE"
+          OUT_DIR="$REPO_DIR/${{ env.ARTIFACT_DIR }}"
+          mkdir -p "$OUT_DIR"
+
+          # Permissions for the docker container to write into our workspace
+          chmod -R a+rwX "$REPO_DIR/archiso" "$OUT_DIR"
+
+          docker run --rm \
+            --privileged \
+            --cap-add SYS_ADMIN \
+            -v /dev:/dev \
+            -v "$REPO_DIR":/novaos \
+            -v "$OUT_DIR":/out \
+            -e NOVAOS_PROFILE="${{ env.ARCHISO_PROFILE }}" \
+            -e GITHUB_REF="${{ github.ref }}" \
+            -e GITHUB_SHA="${{ github.sha }}" \
+            archlinux:latest \
+            /bin/bash -eux -c '
+              set -euo pipefail
+
+              # 1) Init pacman
+              pacman-key --init
+              pacman-key --populate archlinux
+              echo "Server = https://geo.mirror.pkgbuild.com/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
+              pacman -Sy --noconfirm --noprogressbar archlinux-keyring
+              pacman -S --noconfirm --noprogressbar --needed archiso git reflector rsync
+
+              # 2) Refresh mirrorlist for speed
+              reflector --latest 30 --protocol https --sort rate --save /etc/pacman.d/mirrorlist || true
+
+              # 3) Copy profile into /tmp to avoid permission issues
+              cp -a /novaos/archiso/novaos /tmp/novaos-profile
+              cd /tmp/novaos-profile
+
+              # 4) Make scripts executable
+              find airootfs/usr/local/bin -type f -exec chmod 0755 {} \;
+              find airootfs -name "*.sh" -exec chmod 0755 {} \;
+
+              # 5) Run archiso
+              mkdir -p /tmp/work /out
+              echo "==================== archiso starting ===================="
+              archiso -v -w /tmp/work -o /out -L NOVAOS_$(date +%Y%m) run . || {
+                echo "==================== archiso FAILED ===================="
+                cp -r /tmp/work /out/work-dump-$(date +%s) 2>/dev/null || true
+                exit 1
+              }
+
+              echo "==================== archiso complete ===================="
+              ls -lh /out/
+              ls -lh /out/*.iso 2>/dev/null || true
+            '
+
+      - name: Capture ISO info
+        id: iso-info
+        run: |
+          set -euo pipefail
+          cd "${{ env.ARTIFACT_DIR }}"
+          ISO=$(ls -1 *.iso 2>/dev/null | head -1 || true)
+          if [[ -z "$ISO" ]]; then
+            echo "No ISO produced!" >&2
+            exit 1
+          fi
+          SHA=$(sha256sum "$ISO" | awk '{print $1}')
+          SIZE=$(du -h "$ISO" | cut -f1)
+          echo "iso_name=$ISO"           >> $GITHUB_OUTPUT
+          echo "iso_path=${{ env.ARTIFACT_DIR }}/$ISO" >> $GITHUB_OUTPUT
+          echo "iso_sha256=$SHA"          >> $GITHUB_OUTPUT
+          echo "iso_size=$SIZE"           >> $GITHUB_OUTPUT
+          echo "### Build artifact" >> $GITHUB_STEP_SUMMARY
+          echo "- File: \`$ISO\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Size: $SIZE"    >> $GITHUB_STEP_SUMMARY
+          echo "- SHA256: \`$SHA\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Generate build manifest
+        run: |
+          cat > ${{ env.ARTIFACT_DIR }}/manifest.json <<EOF
+          {
+            "name": "NovaOS",
+            "version": "$(date +%Y.%m.%d)",
+            "git_sha": "${{ github.sha }}",
+            "git_ref": "${{ github.ref }}",
+            "build_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "profile": "${{ env.ARCHISO_PROFILE }}",
+            "iso": "${{ steps.iso-info.outputs.iso_name }}",
+            "sha256": "${{ steps.iso-info.outputs.iso_sha256 }}",
+            "github_run_id": "${{ github.run_id }}"
+          }
+          EOF
+          cat ${{ env.ARTIFACT_DIR }}/manifest.json
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-iso
+          path: |
+            ${{ env.ARTIFACT_DIR }}/*.iso
+            ${{ env.ARTIFACT_DIR }}/manifest.json
+            ${{ env.ARTIFACT_DIR }}/*.sha256
+          retention-days: 14
+          compression-level: 0   # ISOs are already compressed
+
+      - name: Generate SHA256 sidecar
+        run: |
+          cd ${{ env.ARTIFACT_DIR }}
+          sha256sum *.iso > NovaOS-x86_64.sha256
+          cat NovaOS-x86_64.sha256
+
+      - name: Set build status (success)
+        id: set-status
+        if: success()
+        run: |
+          echo "build_status=success" >> $GITHUB_OUTPUT
+          echo "build_log_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+      - name: Set build status (failure)
+        id: set-status-fail
+        if: failure()
+        run: |
+          echo "build_status=failed" >> $GITHUB_OUTPUT
+          echo "build_log_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaos-build-logs-${{ github.run_id }}
+          path: |
+            ${{ env.ARTIFACT_DIR }}/work-dump-*
+            /tmp/novaos-build.log
+          if-no-files-found: ignore
+          retention-days: 30
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') && needs.build.outputs.build_status == 'success'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download ISO artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-iso
+          path: iso
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: NovaOS ${{ github.ref_name }}
+          body: |
+            # NovaOS ${{ github.ref_name }}
+
+            **Build date:** $(date -u +%Y-%m-%dT%H:%M:%SZ)
+            **Git SHA:** ${{ github.sha }}
+            **SHA256:** `${{ needs.build.outputs.iso_sha256 }}`
+
+            ## Installation
+            1. Flash the ISO to a USB stick: `sudo dd if=NovaOS-*.iso of=/dev/sdX bs=4M status=progress conv=fsync`
+            2. Boot from the USB stick
+            3. The NovaOS first-boot service will auto-detect your hardware and
+               configure the optimal drivers for AMD/Intel/Nvidia GPUs.
+
+            ## Verification
+            ```bash
+            sha256sum -c NovaOS-x86_64.sha256
+            ```
+          files: |
+            iso/*.iso
+            iso/*.sha256
+            iso/manifest.json
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+  notify-failure:
+    needs: build
+    if: failure() && github.event_name != 'pull_request'
+    runs-on: ubuntu-22.04
+    permissions:
+      actions: write
+      contents: write
+      issues: write
+    steps:
+      - name: Trigger auto-repair workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log('Build failed - dispatching auto-repair workflow');
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'auto-repair.yml',
+              ref: context.ref,
+              inputs: {
+                failed_run_id: '${{ github.run_id }}',
+                failed_job:   'build',
+                git_sha:      '${{ github.sha }}'
+              }
+            });
+
+      - name: Open issue for failed build
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.run_id }}
+          LOG_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GIT_SHA: ${{ github.sha }}
+        with:
+          filename: .github/ISSUE_TEMPLATE/build-failure.md
+          update_existing: true
+          search_existing: open

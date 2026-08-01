@@ -1,0 +1,40 @@
+name: sync-mirror
+
+# Keeps the NovaOS Arch repo mirrorlist fresh inside the ISO
+# and verifies the build pipeline is healthy even without code changes.
+
+on:
+  schedule:
+    - cron: '30 3 * * 1'   # Monday 03:30 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-mirrorlist:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pull latest mirrorlist from Arch
+        run: |
+          set -e
+          mkdir -p archiso/novaos/airootfs/etc/pacman.d
+          curl -fsSL \
+            "https://archlinux.org/mirrorlist/?country=all&protocol=https&ip_version=4&use_mirror_status=on" \
+            | sed 's/^#Server/Server/' \
+            > archiso/novaos/airootfs/etc/pacman.d/mirrorlist
+          head -20 archiso/novaos/airootfs/etc/pacman.d/mirrorlist
+
+      - name: Commit if changed
+        run: |
+          git config user.email "novaos-bot@users.noreply.github.com"
+          git config user.name  "NovaOS Mirror Bot"
+          git add archiso/novaos/airootfs/etc/pacman.d/mirrorlist
+          if git diff --cached --quiet; then
+            echo "No mirrorlist changes."
+          else
+            git commit -m "chore: refresh Arch mirrorlist (weekly sync)"
+            git push
+          fi

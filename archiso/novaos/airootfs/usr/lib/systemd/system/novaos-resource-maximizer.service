@@ -1,0 +1,15 @@
+[Unit]
+Description=NovaOS Resource Maximizer Daemon (software intelligence)
+After=network.target novaos-hardware-optimizer.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/bin/novaos-resource-maximizer.py
+Restart=always
+RestartSec=5
+Nice=-10
+IOSchedulingClass=realtime
+IOSchedulingPriority=2
+
+[Install]
+WantedBy=multi-user.target

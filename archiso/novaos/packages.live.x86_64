@@ -1,0 +1,76 @@
+# Stage 1 - install on the live ISO's airootfs only (not copied to target)
+# Used for: build tools, calibration, hardware probes, calibration helpers
+################################################################################
+
+## --- archiso-specific (live medium only) ---
+archiso
+archiso-initramfs
+deepin-anything-archiso
+booster
+archinstall
+
+## --- Live-ISO tools ---
+memtest86+
+edk2-shell
+clonezilla
+partclone
+partimage
+gpart
+testdisk
+photorec
+secure-delete
+ntfs-3g-system-compression
+mc
+mc-hint
+p7zip
+unrar
+unzip
+zip
+xz
+lz4
+zstd
+cabextract
+cpio
+dconf
+dconf-editor
+gconf
+gsettings-desktop-schemas
+
+## --- Hardware probing for NovaOS first-boot service ---
+hwinfo
+hw-probe
+inxi
+dmidecode
+lshw
+lscpu
+lsblk
+lspci
+lsusb
+lsscsi
+smartmontools
+util-linux
+usbutils
+pciutils
+acpid
+acpi
+upower
+lm_sensors
+fan-speed-gui
+thunderbolt-tools
+fwupd
+dmraid
+mdadm
+multipath-tools
+open-iscsi
+nfs-utils
+samba
+
+## --- Arch live helpers ---
+reflector
+pacman-mirrorlist
+arch-wiki-lite
+arch-audit
+pacutils
+pacseek
+pacmanlogviewer
+rate-mirrors

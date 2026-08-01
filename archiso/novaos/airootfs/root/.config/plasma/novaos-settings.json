@@ -1,0 +1,52 @@
+{
+    "KDE": {
+        "widgetStyle": "kvantum",
+        "colorScheme": "NovaOS Crystal",
+        "LookAndFeelPackage": "com.novaos.desktop",
+        "SingleClick": false,
+        "ShowIconsOnMenuButtons": true,
+        "LightApplicationskbd": false,
+        "animationDurationFactor": 1.0
+    },
+    "Icons": {
+        "Theme": "NovaOS-Crystal"
+    },
+    "KDE-Global-Settings": {
+        "AntialiasingEnabled": true,
+        "Style": "kvantum"
+    },
+    "Fonts": {
+        "fixed": "JetBrains Mono,12,-1,5,400,0,0,0,0,0,0,0,0,0,0,1",
+        "general": "Inter,12,-1,5,400,0,0,0,0,0,0,0,0,0,0,1",
+        "menu": "Inter,12,-1,5,500,0,0,0,0,0,0,0,0,0,0,1",
+        "toolBarFont": "Inter,11,-1,5,400,0,0,0,0,0,0,0,0,0,0,1",
+        "smallestReadableFont": "Inter,8,-1,5,400,0,0,0,0,0,0,0,0,0,0,1",
+        "titleFont": "Inter,13,-1,5,600,0,0,0,0,0,0,0,0,0,0,1"
+    },
+    "KWin": {
+        "BorderSize": 0,
+        "TitlebarHeight": 36,
+        "BorderlessMaximizedWindows": true,
+        "WindowsBlockCompositing": false,
+        "AnimationSpeed": 1,
+        "BlurEnabled": true,
+        "GlassEnabled": true,
+        "Effect-AnimateSpeed": 220,
+        "Effect-WobblyWindowsSpeed": 220
+    },
+    "Kvantum": {
+        "theme": "NovaOS"
+    },
+    "SDDM": {
+        "theme": "novaos"
+    },
+    "Wallpaper": {
+        "plugin": "com.github.zjesg.smartvideowallpaper",
+        "wallpaper": "/usr/share/wallpapers/NovaOS/CrystalAurora.mp4"
+    },
+    "PlasmaThemes": {
+        "name": "NovaOS",
+        "blurEnabled": true,
+        "transparentPanels": true
+    }
+}

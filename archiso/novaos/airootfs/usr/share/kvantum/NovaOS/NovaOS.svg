@@ -1,0 +1,147 @@
+%YAML 1.2
+---
+# NovaOS Kvantum theme configuration
+# Glass-morphism design language with translucent panels and blur
+# Compatible with Qt6 + Kvantum 1.0+
+
+General:
+  author: "NovaOS Project"
+  theme_name: "NovaOS"
+  comment: "Crystal Glass theme for NovaOS Plasma 6"
+  x11drag: "menubar"
+  alt_mnemonic: true
+  double_click: true
+  composite: true
+  translucent: true
+  reduce_window_opacity: 8
+  reduce_menu_opacity: 12
+  opaque_colors: false
+  blurring: true
+  blur克力: 22
+  window_shadow: true
+  fake_opacity: 92
+  menu_shadow: 12
+  tooltip_shadow: 8
+  spread_menuitems: true
+  group_toolbar_buttons: false
+  group_toolbar_buttons_separators: false
+  group_toolbar_handle: true
+  layout_spacing: 6
+  layout_margin = 8
+  submenu_overlap: 0
+  menu_separator_height = 8
+  toolbar_item_spacing = 4
+  toolbar_spacing = 6
+  gtkless_menus: false
+  kwin_restore: true
+  join_menu: true
+  kvantum_profile: "Crystal"
+  small_icon_size: 16
+  large_icon_size = 32
+  button_icon_size = 16
+  toolbar_icon_size: 22
+  font_family = "Inter"
+  font_size = 12
+
+Focus:
+  window: "#78A0FF"
+  window_opacity = 60
+  element: "#78A0FF"
+  element_opacity: 80
+
+Button:
+  window: "#78A0FF"
+  window_opacity: 0
+  element: "#78A0FF"
+  element_opacity: 100
+  focus_window = "#FFFFFF"
+  focus_window_opacity: 30
+  focus_element: "#FFFFFF"
+  focus_element_opacity = 30
+
+Wallpaper:
+  image: "wallpapers/NovaOS/CrystalAurora.png"
+  position: "center"
+  color = "#0E1422"
+
+Colors:
+  window: "#0E1422"
+  window_opacity: 0.78
+  base: "#16203A"
+  base_opacity: 0.65
+  altBase: "#1A2742"
+  altBase_opacity: 0.70
+  button: "#1F2A47"
+  button_opacity: 0.55
+  light: "#2A3658"
+  light_opacity = 0.55
+  midlight: "#223050"
+  midlight_opacity: 0.60
+  dark: "#0C1322"
+  dark_opacity: 0.80
+  mid = "#10182C"
+  mid_opacity: 0.78
+  text: "#E8EEF7"
+  text_opacity: 100
+  windowText: "#E8EEF7"
+  windowText_opacity: 100
+  buttonText: "#E8EEF7"
+  buttonText_opacity: 100
+  baseText: "#E8EEF7"
+  baseText_opacity: 100
+  altBaseText: "#D7E0EE"
+  altBaseText_opacity: 100
+  tooltip: "#0E1422"
+  tooltip_opacity: 0.94
+  tooltipText: "#E8EEF7"
+  tooltipText_opacity: 100
+  highlight: "#78A0FF"
+  highlight_opacity: 0.55
+  highlightedText: "#FFFFFF"
+  highlightedText_opacity: 100
+  highlight_inactive: "#4A6FE3"
+  highlight_inactive_opacity = 0.55
+  link: "#78A0FF"
+  linkVisited: "#A78BFA"
+  placeholder: "#8A98B8"
+  placeholder_opacity: 100
+  menuBar: "#0E1422"
+  menuBar_opacity = 0.60
+  menu: "#0E1422"
+  menu_opacity: 0.85
+  menuItem: "#1F2A47"
+  menuItem_opacity = 0.0
+  menuSeparator = "#324061"
+  menuSeparator_opacity: 0.40
+  status: "#0E1422"
+  status_opacity: 0.55
+  statusText: "#E8EEF7"
+  statusText_opacity: 100
+  panel = "#0E1422"
+  panel_opacity: 0.45
+  panelText: "#E8EEF7"
+  panelText_opacity: 100
+
+Hacks:
+  transparent_dolphin_view: true
+  transparent_pcmanfm_sidepane: false
+  transparent_ktitle_label: true
+  lxqt_main_menu: "fusion"
+  dolphin_statusbar_thickness: 2
+  transparent_menubar: true
+  kcapacitybar_as_progressbar: true
+  opaque_colors: false
+  scrollbarless_kate: false
+  iconless_pushbutton: false
+  iconless_menu: false
+  blur_only_active_window: false
+  centered_forms: false
+  noninteger_translucency: true
+  normal_default_pushbutton: true
+  no_selection_tint: false
+  no_window_pattern: false
+  dark_titlebar: true
+  tint_on_button_press: true
+  transparent_arrow_button: false
+  override_icon_dir: "icons"
+  kwin_mainmenu_gap: 8

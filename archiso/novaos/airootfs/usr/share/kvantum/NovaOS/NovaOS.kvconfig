@@ -1,0 +1,12 @@
+[General]
+theme=NovaOS
+
+[Icons]
+Theme=NovaOS-Crystal
+
+[KDE]
+widgetStyle=Kvantum
+ColorScheme=NovaOS Crystal
+
+[WM]
+activeColor=#78A0FF

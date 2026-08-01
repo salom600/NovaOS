@@ -1,0 +1,20 @@
+[Theme]
+# NovaOS SDDM theme entry point
+Identifier=com.novaos.sddm
+Name=NovaOS Crystal
+Name[ar]=نوفا أو إس كريستال
+Name[fr]=NovaOS Crystal
+Description=Glass login with animated wallpaper, gradient clock and live user list
+Description[ar]=شاشة دخول زجاجية مع خلفية متحركة وساعة متدرجة
+Author=NovaOS Project
+Copyright=(c) 2026 NovaOS Project
+License=GPL-3.0-or-later
+Type=sddm-theme
+Version=1.0
+Website=https://github.com/salom600/NovaOS
+MainScript=Main.qml
+ConfigFile=theme.conf
+TranslationsDirectory=translations
+Theme-Id=novaos
+Theme-API=2.0
+QtVersion=6

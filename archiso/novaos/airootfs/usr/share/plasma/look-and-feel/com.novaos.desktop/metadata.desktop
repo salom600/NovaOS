@@ -1,0 +1,16 @@
+[Desktop Entry]
+Name=NovaOS
+Name[ar]=نوفا أو إس
+Comment=NovaOS Crystal Glass Look and Feel
+Comment[ar]=مظهر نوفا أو إس الزجاجي الكريستالي
+Type=Service
+X-KDE-ServiceTypes=Plasma/LookAndFeel
+X-KDE-ParentApp=
+X-KDE-PluginInfo-Name=com.novaos.desktop
+X-KDE-PluginInfo-Author=NovaOS Project
+X-KDE-PluginInfo-Email=contact@novaos.io
+X-KDE-PluginInfo-License=GPL-3.0+
+X-KDE-PluginInfo-Version=1.0
+X-KDE-PluginInfo-Website=https://github.com/salom600/NovaOS
+X-KDE-PluginInfo-Category=Plasma 6 Look And Feel
+X-Plasma-MainScript=defaults

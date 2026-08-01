@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NovaOS Store
+Name[ar]=متجر نوفا أو إس
+Comment=Install any app in one click - Linux, Flatpak, AUR, or Windows
+Comment[ar]=ثبّت أي تطبيق بنقرة واحدة - لينكس، فلاتباك، AUR، أو ويندوز
+Icon=novaos-store
+Exec=/opt/novaos-store/frontend/store.py
+Categories=System;PackageManager;Settings;Utility;
+Keywords=store;install;package;app;
+Terminal=false
+StartupNotify=true
+MimeType=application/x-ms-dos-exec;application/x-wine-extension-msi;
+X-KDE-StartupNotify=true

@@ -1,0 +1,12 @@
+NAME="NovaOS"
+VERSION="2026.1 (Crystal Glass)"
+ID=novaos
+ID_LIKE=arch
+VERSION_ID=2026.1
+PRETTY_NAME="NovaOS 2026.1 (Crystal Glass)"
+ANSI_COLOR="38;2;120;160;255"
+HOME_URL="https://github.com/salom600/NovaOS"
+DOCUMENTATION_URL="https://github.com/salom600/NovaOS/tree/main/docs"
+SUPPORT_URL="https://github.com/salom600/NovaOS/issues"
+BUG_REPORT_URL="https://github.com/salom600/NovaOS/issues"
+LOGO=novaos

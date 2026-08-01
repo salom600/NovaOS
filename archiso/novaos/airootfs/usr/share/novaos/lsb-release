@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#
+# NovaOS - /etc/lsb-release mimic
+LSB_VERSION="1.4"
+DISTRIB_ID="NovaOS"
+DISTRIB_RELEASE="2026.1"
+DISTRIB_DESCRIPTION="NovaOS 2026.1 (Crystal Glass)"

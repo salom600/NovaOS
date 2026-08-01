@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE wallpaper SYSTEM "http://www.kde.org/standards/kmc/kmc.dtd">
+<wallpaper xmlns="http://www.kde.org/standards/kmc/kmc-2.0" type="video">
+  <name>Crystal Aurora</name>
+  <name xml:lang="ar">الشفافية القطبية</name>
+  <name xml:lang="fr">Aurora de cristal</name>
+  <filename>/usr/share/wallpapers/NovaOS/CrystalAurora.mp4</filename>
+  <resize>scale-and-crop</resize>
+  <darkInBackground>false</darkInBackground>
+  <author>NovaOS Project</author>
+  <email>contact@novaos.io</email>
+  <license>CC-BY-SA-4.0</license>
+</wallpaper>

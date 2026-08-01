@@ -1,0 +1,27 @@
+#
+# NovaOS - locale.gen
+# Generates every locale we ship translations for.
+#
+
+en_US.UTF-8 UTF-8
+en_GB.UTF-8 UTF-8
+ar_SA.UTF-8 UTF-8
+ar_EG.UTF-8 UTF-8
+fr_FR.UTF-8 UTF-8
+de_DE.UTF-8 UTF-8
+es_ES.UTF-8 UTF-8
+it_IT.UTF-8 UTF-8
+pt_BR.UTF-8 UTF-8
+ru_RU.UTF-8 UTF-8
+uk_UA.UTF-8 UTF-8
+tr_TR.UTF-8 UTF-8
+nl_NL.UTF-8 UTF-8
+pl_PL.UTF-8 UTF-8
+sv_SE.UTF-8 UTF-8
+zh_CN.UTF-8 UTF-8
+zh_TW.UTF-8 UTF-8
+ja_JP.UTF-8 UTF-8
+ko_KR.UTF-8 UTF-8
+hi_IN.UTF-8 UTF-8
+fa_IR.UTF-8 UTF-8
+he_IL.UTF-8 UTF-8

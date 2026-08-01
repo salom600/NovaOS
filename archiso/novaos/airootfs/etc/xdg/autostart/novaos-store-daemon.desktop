@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=NovaOS Store Backend
+Comment=Background daemon for one-click package installation
+Icon=novaos-store
+Exec=/usr/bin/python3 /opt/novaos-store/backend/store_daemon.py
+Terminal=false
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=plasma
+X-KDE-StartupNotify=false
+X-systemd-syslog=true
+NoDisplay=true

@@ -1,0 +1,12 @@
+# Packages in addition to packages.x86_64, but only for the installed
+# (target) system, not the live ISO itself.
+################################################################################
+
+## --- NovaOS user-facing tooling that should not bloat the live medium ---
+novaos-welcome
+novaos-store
+novaos-hardware-optimizer
+novaos-resource-maximizer
+novaos-wallpapers
+novaos-sounds
+novaos-themes-shell

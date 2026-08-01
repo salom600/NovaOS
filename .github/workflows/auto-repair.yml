@@ -1,0 +1,269 @@
+name: auto-repair
+
+# This workflow is triggered automatically when build-novaos-iso fails.
+# It downloads the failed log, parses common error patterns, attempts
+# automatic fixes (in a branch), commits, and re-triggers the build.
+#
+# If we cannot auto-fix, we leave a comment on the issue created by build-iso.yml.
+
+on:
+  workflow_dispatch:
+    inputs:
+      failed_run_id:
+        description: 'Run ID of the failed build'
+        required: true
+      failed_job:
+        description: 'Job that failed'
+        required: false
+        default: 'build'
+      git_sha:
+        description: 'Git SHA of the failed build'
+        required: true
+  workflow_run:
+    workflows: [ build-novaos-iso ]
+    types: [ completed ]
+    branches: [ main, master, develop ]
+
+permissions:
+  actions: read
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: auto-repair-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  analyze-and-fix:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - name: Determine failed run
+        id: detect
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let runId = '${{ inputs.failed_run_id }}';
+            let gitSha = '${{ inputs.git_sha }}';
+            if (!runId && context.payload.workflow_run) {
+              const wf = context.payload.workflow_run;
+              if (wf.conclusion === 'success') {
+                console.log('Workflow succeeded - nothing to repair.');
+                core.setOutput('skip', 'true');
+                return;
+              }
+              runId = String(wf.id);
+              gitSha = wf.head_sha;
+            }
+            console.log(`Repair target: runId=${runId}, sha=${gitSha}`);
+            core.setOutput('run_id', runId);
+            core.setOutput('git_sha', gitSha);
+            core.setOutput('skip', 'false');
+
+      - name: Skip if previous run was success
+        if: steps.detect.outputs.skip == 'true'
+        run: echo "No repair needed - previous build succeeded."
+
+      - name: Checkout NovaOS (at failed SHA)
+        if: steps.detect.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.detect.outputs.git_sha }}
+
+      - name: Download failed build logs
+        if: steps.detect.outputs.skip != 'true'
+        uses: actions/github-script@v7
+        env:
+          RUN_ID: ${{ steps.detect.outputs.run_id }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const runId = process.env.RUN_ID;
+            console.log(`Fetching logs for run ${runId}...`);
+            try {
+              const { data } = await github.rest.actions.downloadWorkflowRunLogs({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: Number(runId)
+              });
+              fs.mkdirSync('/tmp/logs', { recursive: true });
+              fs.writeFileSync('/tmp/logs/run.zip', Buffer.from(data));
+              console.log(`Saved ${Buffer.from(data).length} bytes of logs.`);
+            } catch (e) {
+              // Fallback - try to fetch logs of each job
+              console.warn('Could not download workflow run logs:', e.message);
+              const jobs = await github.rest.actions.listJobsForWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: Number(runId)
+              });
+              for (const job of jobs.data.jobs) {
+                if (job.conclusion !== 'failure') continue;
+                console.log(`Fetching logs of failed job: ${job.name}`);
+                try {
+                  const { data } = await github.rest.actions.downloadJobLogs({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    job_id: job.id
+                  });
+                  const safeName = job.name.replace(/[^a-z0-9]/gi, '_');
+                  fs.writeFileSync(`/tmp/logs/${safeName}.txt`, data);
+                } catch (e2) {
+                  console.warn(`Failed to fetch job ${job.name}:`, e2.message);
+                }
+              }
+            }
+
+      - name: Extract logs
+        if: steps.detect.outputs.skip != 'true'
+        run: |
+          mkdir -p /tmp/logs/extracted
+          if [[ -f /tmp/logs/run.zip ]]; then
+            unzip -q -o /tmp/logs/run.zip -d /tmp/logs/extracted || true
+          fi
+          # Concatenate everything into one searchable log
+          find /tmp/logs -type f \( -name "*.txt" -o -name "*.log" \) -print -exec cat {} \; \
+            > /tmp/logs/combined.log 2>/dev/null || true
+          wc -l /tmp/logs/combined.log || echo "no combined log"
+
+      - name: Install Python
+        if: steps.detect.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run auto-fixer
+        if: steps.detect.outputs.skip != 'true'
+        id: fixer
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/auto_fix.py \
+            --log /tmp/logs/combined.log \
+            --repo "$PWD" \
+            --run-id "${{ steps.detect.outputs.run_id }}" \
+            --git-sha "${{ steps.detect.outputs.git_sha }}" \
+            > /tmp/fix-result.json
+          cat /tmp/fix-result.json
+          echo "fixed=$(jq -r '.fixed' /tmp/fix-result.json)" >> $GITHUB_OUTPUT
+          echo "patched_files<<EOF" >> $GITHUB_OUTPUT
+          jq -r '.files[]' /tmp/fix-result.json >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          jq -r '.summary' /tmp/fix-result.json >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Print patch
+        if: steps.fixer.outputs.fixed == 'true'
+        run: |
+          git status --short
+          git --no-pager diff --stat || true
+
+      - name: Commit fix to repair branch & open PR
+        if: steps.fixer.outputs.fixed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BR="auto-repair/${{ steps.detect.outputs.run_id }}"
+          git config user.email "novaos-bot@users.noreply.github.com"
+          git config user.name  "NovaOS Auto-Repair Bot"
+          git checkout -b "$BR"
+          git add -A
+          git commit -m "fix(ci): auto-repair build ${{ steps.detect.outputs.run_id }}
+
+          ${{ steps.fixer.outputs.summary }}
+
+          Files patched:
+          ${{ steps.fixer.outputs.patched_files }}
+
+          Generated by .github/scripts/auto_fix.py"
+
+          git push --force-with-lease origin "$BR"
+
+          # Open PR
+          gh pr create \
+            --title "fix(ci): auto-repair build #${{ steps.detect.outputs.run_id }}" \
+            --body  "## Auto-Repair Summary
+
+          ${{ steps.fixer.outputs.summary }}
+
+          ### Files patched
+          \`\`\`
+          ${{ steps.fixer.outputs.patched_files }}
+          \`\`\`
+
+          ### Failed build
+          - Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ steps.detect.outputs.run_id }}
+          - SHA:  \`${{ steps.detect.outputs.git_sha }}\`
+
+          Once merged, the build workflow will re-trigger automatically." \
+            --base "${{ github.ref_name || 'main' }}" \
+            --head "$BR" \
+            --label "auto-repair" || true
+
+          echo "PR pushed to $BR"
+
+      - name: Re-trigger build workflow
+        if: steps.fixer.outputs.fixed == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build-iso.yml',
+              ref: context.ref
+            });
+            console.log('build-iso.yml re-triggered.');
+
+      - name: Report unrepairable failure
+        if: steps.fixer.outputs.fixed != 'true' && steps.detect.outputs.skip != 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = [
+              '## ❌ Auto-repair could not fix this build',
+              '',
+              `Run: [${{ steps.detect.outputs.run_id }}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${{ steps.detect.outputs.run_id }})`,
+              `SHA: \`${{ steps.detect.outputs.git_sha }}\``,
+              '',
+              '### Summary',
+              '```',
+              `${{ steps.fixer.outputs.summary }}`,
+              '```',
+              '',
+              'A maintainer needs to look at the logs and patch manually.'
+            ].join('\n');
+
+            // Add comment to the most recent open issue with "build-failure" label
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'build-failure',
+              sort: 'created',
+              direction: 'desc',
+              per_page: 1
+            });
+            if (issues.data.length === 0) {
+              // Open a new one
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Build failure requiring manual fix (#${{ steps.detect.outputs.run_id }})`,
+                body,
+                labels: ['build-failure', 'unrepairable']
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues.data[0].number,
+                body
+              });
+            }

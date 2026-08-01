@@ -1,0 +1,40 @@
+# NovaOS build artifacts
+out/
+work/
+*.iso
+*.sfs
+*.img
+*.vmdk
+*.qcow2
+*.vdi
+*.tar.gz
+*.tar.xz
+*.tar.zst
+
+# Local state
+.state/
+*.local
+*.log
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Secrets
+.env
+.env.*
+secrets/
+*.key
+*.pem
+*.token
+
+# Do not commit token
+GH_TOKEN
+GITHUB_TOKEN
