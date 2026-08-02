@@ -148,16 +148,31 @@ jobs:
               cp -a /novaos/archiso/novaos /tmp/novaos-profile
               cd /tmp/novaos-profile
 
+              # 3b) Diagnostics: show the profile structure so we can
+              #     verify mkarchiso will find everything it needs.
+              echo "----- NovaOS profile contents -----"
+              ls -la /tmp/novaos-profile/
+              echo "----- profiledef.sh -----"
+              cat profiledef.sh || echo "(profiledef.sh MISSING)"
+              echo "----- pacman.conf exists? -----"
+              [[ -f pacman.conf ]] && echo "yes" || echo "NO - mkarchiso will use /etc/pacman.conf"
+              echo "----- packages.x86_64 line count -----"
+              wc -l packages.x86_64 || echo "(packages.x86_64 MISSING)"
+              echo "----- airootfs top level -----"
+              ls -la airootfs/ || echo "(airootfs MISSING)"
+
               # 4) Make scripts executable
               find airootfs/usr/local/bin -type f -exec chmod 0755 {} \;
               find airootfs -name "*.sh" -exec chmod 0755 {} \;
 
               # 5) Run archiso (use the resolved binary path).
               #    mkarchiso syntax: mkarchiso [options] <profile_dir>
-              #    There is NO 'run' subcommand - that was a bug.
+              #    Pass ABSOLUTE path - some mkarchiso versions have issues
+              #    with relative paths when calling realpath internally.
               mkdir -p /tmp/work /out
               echo "==================== archiso starting ===================="
-              "$ARCHISO_BIN" -v -w /tmp/work -o /out -L NOVAOS_$(date +%Y%m) . || {
+              echo "Running: $ARCHISO_BIN -v -w /tmp/work -o /out /tmp/novaos-profile"
+              "$ARCHISO_BIN" -v -w /tmp/work -o /out /tmp/novaos-profile 2>&1 || {
                 echo "==================== archiso FAILED ===================="
                 cp -r /tmp/work /out/work-dump-$(date +%s) 2>/dev/null || true
                 exit 1
