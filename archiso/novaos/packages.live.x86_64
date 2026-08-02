@@ -1,27 +1,21 @@
 # Stage 1 - install on the live ISO's airootfs only (not copied to target)
-# Used for: build tools, calibration, hardware probes, calibration helpers
+# Slimmed: removed heavy recovery tools (clonezilla, testdisk, photorec, gpart),
+# duplicate Pacman helpers, deepin-anything (pulls Qt5 deps), samba (heavy).
 ################################################################################
 
 ## --- archiso-specific (live medium only) ---
 archiso
 archiso-initramfs
-deepin-anything-archiso
 booster
 archinstall
 
-## --- Live-ISO tools ---
+## --- Live-ISO tools (essentials only) ---
 memtest86+
 edk2-shell
-clonezilla
 partclone
-partimage
-gpart
-testdisk
-photorec
 secure-delete
 ntfs-3g-system-compression
 mc
-mc-hint
 p7zip
 unrar
 unzip
@@ -32,13 +26,12 @@ zstd
 cabextract
 cpio
 dconf
-dconf-editor
-gconf
 gsettings-desktop-schemas
+# clonezilla, testdisk, photorec, gpart, partimage, mc-hint,
+# gconf, dconf-editor -> install on demand from NovaOS Store
 
 ## --- Hardware probing for NovaOS first-boot service ---
 hwinfo
-hw-probe
 inxi
 dmidecode
 lshw
@@ -46,7 +39,6 @@ lscpu
 lsblk
 lspci
 lsusb
-lsscsi
 smartmontools
 util-linux
 usbutils
@@ -55,22 +47,15 @@ acpid
 acpi
 upower
 lm_sensors
-fan-speed-gui
-thunderbolt-tools
 fwupd
-dmraid
 mdadm
-multipath-tools
-open-iscsi
-nfs-utils
-samba
+# hw-probe, lsscsi, fan-speed-gui, thunderbolt-tools, dmraid,
+# multipath-tools, open-iscsi, nfs-utils, samba
+#   -> install on demand from NovaOS Store
 
 ## --- Arch live helpers ---
 reflector
 pacman-mirrorlist
-arch-wiki-lite
-arch-audit
-pacutils
-pacseek
-pacmanlogviewer
 rate-mirrors
+# arch-wiki-lite, arch-audit, pacutils, pacseek, pacmanlogviewer
+#   -> install on demand from NovaOS Store

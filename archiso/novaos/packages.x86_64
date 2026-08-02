@@ -1,7 +1,20 @@
-# NovaOS - Package List (x86_64)
+# NovaOS - Package List (x86_64) - SLIM PROFILE
 # Hardware: 2009-era Intel -> 2026 AMD/Nvidia/Intel ARC + ARM-prep
 # Desktop : KDE Plasma 6 (Wayland) with Kvantum glass theme
 # Avoids  : Ubuntu base, LXQt, XFCE
+#
+# Slimming strategy (target ~2.5-3 GB ISO, down from 7 GB):
+#   - Keep: base system, all GPU drivers, Plasma 6 desktop, Wine, NovaOS Store,
+#           NovaOS services, Python (for Store + daemons), basic viewers
+#   - Drop (install on demand from NovaOS Store):
+#       * Heavy media studio (Blender, Krita, GIMP, Inkscape, Audacity, OBS)
+#       * Office suites (LibreOffice, Calligra) - users install what they need
+#       * Dev toolchains (Rust, Go, Node, Dotnet, JDK, Maven, Gradle)
+#       * Container/virtualization (Docker, QEMU, libvirt, OVMF)
+#       * Duplicate disk tools (gparted, gnome-disk-utility)
+#       * Duplicate fonts (Adobe Source Han - noto-fonts-cjk already covers)
+#       * Niche network apps (filezilla, transmission)
+#       * Debug tools (gdb, valgrind, perf, strace, ltrace)
 ################################################################################
 
 ## --- Base system ---
@@ -30,7 +43,6 @@ squashfs-tools
 grub
 efibootmgr
 syslinux
-# systemd-boot  # part of systemd package
 mtools
 
 ## --- Kernel modules / drivers (broad HW) ---
@@ -59,7 +71,6 @@ vulkan-nouveau
 libva-mesa-driver
 libva-intel-driver
 intel-media-driver
-# mesa-vdpau  # now part of mesa
 nvidia-dkms
 nvidia-utils
 lib32-nvidia-utils
@@ -88,29 +99,22 @@ xorg-xdpyinfo
 xorg-setxkbmap
 xorg-xbacklight
 xorg-xkill
-xorg-xlsfonts
-xorg-xrefresh
 wayland
 wayland-protocols
 xorg-xwayland
-# xwaylandvideobridge  # AUR-only
 seatd
 
-## --- KDE Plasma 6 desktop ---
+## --- KDE Plasma 6 desktop (core) ---
 plasma-desktop
 plasma-workspace
 plasma-pa
 plasma-nm
 plasma-disks
-plasma-firewall
 plasma-systemmonitor
-plasma-thunderbolt
 kde-cli-tools
 kde-gtk-config
 kdeconnect
-kdeplasma-addons
 kwin
-# kwin-effects  # does not exist as separate pkg
 kwayland
 kio
 kio-extras
@@ -125,15 +129,12 @@ kate
 kcalc
 kdialog
 kfind
-kgamma
 kwalletmanager
 kwallet-pam
 kscreen
 kscreenlocker
-# ksysguard  # renamed to plasma-systemmonitor
 ksystemlog
 kwrited
-# khotkeys  # deprecated in Plasma 6
 kmenuedit
 milou
 oxygen
@@ -151,7 +152,6 @@ kpipewire
 xdg-desktop-portal-kde
 xdg-desktop-portal
 xdg-desktop-portal-gtk
-# kwallet-query  # part of kwalletmanager
 kglobalacceld
 plasma5support
 
@@ -166,29 +166,21 @@ qt6-5compat
 qt6-declarative
 qt6-imageformats
 qt6-multimedia
-qt6-positioning
 qt6-shadertools
-qt6-speech
 qt6-tools
 qt6-translations
 qt6-webchannel
 qt6-webengine
-qt6-websockets
-qt6-webview
 gtk3
 gtk4
-# gtk-engines  # deprecated
-# gtk-engine-murrine  # may be AUR-only
 gnome-themes-extra
 hicolor-icon-theme
 adwaita-icon-theme
 papirus-icon-theme
-# tela-circle-icon-theme-git  # AUR-only - install post-boot via paru
 
 ## --- Display / color management ---
 colord
 colord-kde
-# icc-profiles  # AUR-only
 
 ## --- Audio / Bluetooth media ---
 pipewire
@@ -197,10 +189,7 @@ pipewire-jack
 pipewire-pulse
 pipewire-audio
 pipewire-v4l2
-pipewire-zeroconf
 wireplumber
-# pulseaudio-alsa  # replaced by pipewire-pulse
-# pulseaudio-bluetooth  # replaced by pipewire-pulse
 pulsemixer
 pavucontrol-qt
 libpulse
@@ -224,22 +213,16 @@ simple-scan
 gvfs
 gvfs-afc
 gvfs-goa
-# gvfs-google  # does not exist
 gvfs-gphoto2
 gvfs-mtp
 gvfs-nfs
 gvfs-smb
 udisks2
 partitionmanager
-gparted
-gnome-disk-utility
 
-## --- Network tools ---
+## --- Network tools (essential only) ---
 firefox
-# firefox-i18n  # needs language suffix
 firefox-ublock-origin
-transmission-qt
-filezilla
 network-manager-applet
 dnsutils
 iproute2
@@ -248,17 +231,14 @@ nftables
 ufw
 firewalld
 openssh
-# openssh-askpass  # use x11-ssh-askpass
 rsync
 wget
 curl
 git
 git-lfs
-gitg
 github-cli
 
-## --- Media ---
-vlc
+## --- Media (minimal - one player, one viewer, codecs) ---
 mpv
 ffmpeg
 ffmpegthumbs
@@ -267,54 +247,33 @@ gst-plugins-good
 gst-plugins-bad
 gst-plugins-ugly
 gst-libav
-audacious
-audacity
-gimp
-inkscape
-kcolorchooser
-kolourpaint
-krita
 spectacle
 okular
 gwenview
-imagemagick
+# vlc, audacious, audacity, gimp, inkscape, krita, kcolorchooser,
+# kolourpaint, imagemagick, blender -> install on demand from NovaOS Store
 
-## --- Office / docs ---
-calligra
-# calligra-sheets  # part of calligra
-# calligra-words  # part of calligra
-# calligra-stage  # part of calligra
-libreoffice-fresh
-libreoffice-fresh-sdk
+## --- Office / docs (minimal - just PDF + notes) ---
 hunspell
 hunspell-en_US
-# hunspell-ar  # AUR-only
 hunspell-fr
 hunspell-de
-# hunspell-es  # AUR-only
 hunspell-it
 hunspell-ru
-# hunspell-zh  # AUR-only
 hyphen
 mythes
 libmythes
-# stirling-pdf  # AUR-only
 pdfarranger
-# masterpdfeditor  # AUR-only
 xournalpp
+# libreoffice-fresh, libreoffice-fresh-sdk, calligra, stirling-pdf,
+# masterpdfeditor -> install on demand from NovaOS Store
 
-## --- Windows compatibility ---
+## --- Windows compatibility (keep - it is a key NovaOS feature) ---
 wine
 wine-gecko
 wine-mono
 winetricks
-# proton-ge-custom  # AUR-only - install post-boot via paru
-# protonup-qt  # AUR-only - install post-boot via paru
-# bottles  # AUR-only - install post-boot via paru
-# dxvk  # AUR-only (dxvk-mingw also AUR)
-# dxvk-mingw  # AUR-only - install post-boot via paru
 vkd3d
-# vkd3d-proton-mingw  # AUR-only - install post-boot via paru
 lib32-vkd3d
 lib32-mesa
 lib32-vulkan-radeon
@@ -322,49 +281,41 @@ lib32-vulkan-intel
 lib32-nvidia-utils
 gamemode
 lib32-gamemode
-gamescope
 mangohud
 lib32-mangohud
+# gamescope -> install on demand from NovaOS Store
+# proton-ge-custom, protonup-qt, bottles, dxvk, dxvk-mingw,
+# vkd3d-proton-mingw -> AUR, install on demand from NovaOS Store
 
 ## --- Package managers / store backend ---
 discover
-# discover-backend-flatpak  # now bundled in discover
 flatpak
 fwupd
 archlinux-appstream-data
 appstream
 appstream-qt
-# paru-bin  # AUR-only - install post-boot via paru
-# yay-bin  # AUR-only - install post-boot via paru
-# pikaur  # AUR-only - install post-boot via paru
+# paru-bin, yay-bin, pikaur -> AUR, install on demand from NovaOS Store
 
-## --- Fonts (CJK + Latin + Arabic + Cyrillic) ---
+## --- Fonts (essentials only - noto-fonts-cjk already covers CJK) ---
 noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
-noto-fonts-extra
-# noto-fonts-arabic  # now part of noto-fonts
 ttf-dejavu
 ttf-liberation
-ttf-bitstream-vera
-ttf-droid
-ttf-fira-mono
 ttf-fira-sans
 ttf-roboto
-ttf-ubuntu-font-family
-# ttf-ms-fonts  # AUR-only - install post-boot via paru
 ttf-carlito
-ttf-caladea
 adobe-source-code-pro-fonts
-adobe-source-han-sans-cn-fonts
-adobe-source-han-sans-jp-fonts
-adobe-source-han-sans-kr-fonts
-adobe-source-han-serif-cn-fonts
 inter-font
 ttf-jetbrains-mono
-ttf-jetbrains-mono-nerd
+# noto-fonts-extra, ttf-bitstream-vera, ttf-droid, ttf-fira-mono,
+# ttf-ubuntu-font-family, ttf-caladea,
+# adobe-source-han-sans-cn-fonts, adobe-source-han-sans-jp-fonts,
+# adobe-source-han-sans-kr-fonts, adobe-source-han-serif-cn-fonts,
+# ttf-jetbrains-mono-nerd, ttf-ms-fonts
+#   -> install on demand from NovaOS Store
 
-## --- Dev / advanced tools (for the power user) ---
+## --- Dev tools (minimal - only what NovaOS daemons + Store need) ---
 base-devel
 gcc
 make
@@ -377,47 +328,24 @@ python-setuptools
 python-wheel
 python-build
 python-virtualenv
-python-pyqt5
 python-pyqt6
 python-pillow
 python-requests
 python-aiohttp
-rust
-go
-nodejs
-npm
-dotnet-sdk
-jdk-openjdk
-jdk21-openjdk
-maven
-gradle
-docker
-docker-buildx
-docker-compose
-podman
-buildah
-skopeo
-qemu
-qemu-desktop
-virt-manager
-libvirt
-edk2-ovmf
-swtpm
-dnsmasq
-ebtables
-# bridge-utils  # deprecated, use iproute2
-openbsd-netcat
-strace
-ltrace
-gdb
-valgrind
-perf
+# rust, go, nodejs, npm, dotnet-sdk, jdk-openjdk, jdk21-openjdk,
+# maven, gradle -> install on demand from NovaOS Store
+# docker, docker-buildx, docker-compose, podman, buildah, skopeo
+#   -> install on demand from NovaOS Store
+# qemu, qemu-desktop, virt-manager, libvirt, edk2-ovmf, swtpm,
+# dnsmasq, ebtables -> install on demand from NovaOS Store
+# strace, ltrace, gdb, valgrind, perf -> install on demand from NovaOS Store
+
+## --- System monitoring (lightweight) ---
 htop
 btop
 nvtop
 glances
 iotop
-# ifstat  # AUR-only, use bmon instead
 nethogs
 bat
 eza
@@ -427,12 +355,15 @@ zoxide
 fzf
 tmux
 neovim
-emacs
 vim
+# emacs -> install on demand from NovaOS Store
 
-## --- NovaOS own packages (built from AUR / this repo) ---
-# smart-video-wallpaper-reborn-git  # AUR-only - install post-boot via paru
+## --- Misc essentials ---
+openbsd-netcat
+
+## --- NovaOS own packages ---
 # novaos-theme, novaos-store, novaos-wallpapers installed via airootfs
+# smart-video-wallpaper-reborn-git -> AUR, install on demand from NovaOS Store
 
 ## --- Tesseract OCR data (pre-selected to avoid interactive prompt) ---
 tesseract-data-eng
