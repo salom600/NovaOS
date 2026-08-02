@@ -19,6 +19,9 @@ __pycache__/
 *.pyc
 *.pyo
 
+# CI logs downloaded for local debugging
+_ci_logs/
+
 # Editor
 .vscode/
 .idea/

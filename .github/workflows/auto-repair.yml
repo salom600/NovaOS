@@ -120,14 +120,31 @@ jobs:
       - name: Extract logs
         if: steps.detect.outputs.skip != 'true'
         run: |
+          set -uo pipefail
           mkdir -p /tmp/logs/extracted
           if [[ -f /tmp/logs/run.zip ]]; then
-            unzip -q -o /tmp/logs/run.zip -d /tmp/logs/extracted || true
+            # Be verbose about extraction - silent failures here are why
+            # auto-repair has been doing nothing.
+            unzip -o /tmp/logs/run.zip -d /tmp/logs/extracted 2>&1 | tail -20 || true
           fi
-          # Concatenate everything into one searchable log
-          find /tmp/logs -type f \( -name "*.txt" -o -name "*.log" \) -print -exec cat {} \; \
-            > /tmp/logs/combined.log 2>/dev/null || true
-          wc -l /tmp/logs/combined.log || echo "no combined log"
+          echo "----- extracted files -----"
+          find /tmp/logs -type f | sort
+          echo "----- building combined.log -----"
+          # Use a while-read loop so filenames with spaces work correctly
+          : > /tmp/logs/combined.log
+          while IFS= read -r -d '' f; do
+            echo "=============== $f ===============" >> /tmp/logs/combined.log
+            cat "$f" >> /tmp/logs/combined.log 2>/dev/null || true
+            echo "" >> /tmp/logs/combined.log
+          done < <(find /tmp/logs -type f \( -name "*.txt" -o -name "*.log" \) -not -name "combined.log" -print0)
+          echo "combined.log size: $(wc -c < /tmp/logs/combined.log) bytes"
+          echo "combined.log lines: $(wc -l < /tmp/logs/combined.log)"
+          echo "----- first 200 chars -----"
+          head -c 200 /tmp/logs/combined.log
+          echo ""
+          echo "----- looking for known error patterns -----"
+          grep -nE "command not found|error:|failed|FAIL|cannot|invalid|not found" \
+            /tmp/logs/combined.log | head -20 || echo "(no matches)"
 
       - name: Install Python
         if: steps.detect.outputs.skip != 'true'

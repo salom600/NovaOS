@@ -401,6 +401,91 @@ def fix_archiso_bootmode(m: re.Match, repo: Path) -> Optional[Dict]:
     return None
 
 
+# Rule 13: archiso command not found -> drop --needed flag from pacman install
+ARCHISO_CMD_NOT_FOUND_RE = re.compile(
+    r"(?:archiso|mkarchiso):\s*command not found|"
+    r"line\s+\d+:\s*archiso:\s*command not found",
+    re.IGNORECASE,
+)
+
+
+def fix_archiso_cmd_not_found(m: re.Match, repo: Path) -> Optional[Dict]:
+    wf = repo / ".github/workflows/build-iso.yml"
+    if not wf.exists():
+        return None
+    text = _read(wf)
+    # Drop the --needed flag from the archiso install line
+    if "--needed archiso git reflector rsync" in text:
+        new_text = text.replace(
+            "--needed archiso git reflector rsync",
+            "archiso git reflector rsync  # no --needed: would skip archiso itself",
+        )
+        # Also add a verification block right after the install line
+        new_text = new_text.replace(
+            "pacman -S --noconfirm --noprogressbar archiso git reflector rsync  # no --needed: would skip archiso itself\n",
+            "pacman -S --noconfirm --noprogressbar archiso git reflector rsync  # no --needed: would skip archiso itself\n"
+            "              command -v archiso || pacman -S --noconfirm archiso\n",
+        )
+        _write(wf, new_text)
+        return {
+            "summary": "Dropped --needed flag from archiso install (was causing silent skip).",
+            "files":   [str(wf.relative_to(repo))],
+        }
+    return None
+
+
+# Rule 14: pacman database locked -> remove lockfile in build step
+PACMAN_LOCK_RE = re.compile(
+    r"failed to initialize alpm library|"
+    r"database.*is locked|/var/lib/pacman/db\.lck",
+    re.IGNORECASE,
+)
+
+
+def fix_pacman_lock(m: re.Match, repo: Path) -> Optional[Dict]:
+    wf = repo / ".github/workflows/build-iso.yml"
+    if not wf.exists():
+        return None
+    text = _read(wf)
+    if "rm -f /var/lib/pacman/db.lck" not in text:
+        new_text = text.replace(
+            "pacman-key --init\n",
+            "rm -f /var/lib/pacman/db.lck\n              pacman-key --init\n",
+            1,
+        )
+        _write(wf, new_text)
+        return {
+            "summary": "Added `rm -f /var/lib/pacman/db.lck` before pacman-key init.",
+            "files":   [str(wf.relative_to(repo))],
+        }
+    return None
+
+
+# Rule 15: docker permission denied -> use --privileged
+DOCKER_PERM_RE = re.compile(
+    r"docker.*permission denied|cannot connect to the Docker daemon",
+    re.IGNORECASE,
+)
+
+
+def fix_docker_perm(m: re.Match, repo: Path) -> Optional[Dict]:
+    wf = repo / ".github/workflows/build-iso.yml"
+    if not wf.exists():
+        return None
+    text = _read(wf)
+    if "docker run --rm \\\\" in text and "--privileged" not in text.split("docker run")[1].split("\\")[0]:
+        new_text = text.replace(
+            "docker run --rm \\",
+            "docker run --rm --privileged \\",
+        )
+        _write(wf, new_text)
+        return {
+            "summary": "Added --privileged flag to docker run.",
+            "files":   [str(wf.relative_to(repo))],
+        }
+    return None
+
+
 # Catalog
 RULES: List[Tuple[str, re.Pattern, callable]] = [
     ("package_not_found",     PKG_NOT_FOUND_RE,    fix_pkg_not_found),
@@ -415,6 +500,9 @@ RULES: List[Tuple[str, re.Pattern, callable]] = [
     ("missing_shared_lib",    MISSING_DEP_RE,      fix_missing_dep),
     ("mkinitcpio_module",     MKINITCPIO_RE,       fix_mkinitcpio),
     ("archiso_bootmode",      ARCHISO_VERSION_RE,  fix_archiso_bootmode),
+    ("archiso_cmd_not_found", ARCHISO_CMD_NOT_FOUND_RE, fix_archiso_cmd_not_found),
+    ("pacman_db_locked",      PACMAN_LOCK_RE,      fix_pacman_lock),
+    ("docker_permission",     DOCKER_PERM_RE,      fix_docker_perm),
 ]
 
 
