@@ -173,22 +173,8 @@ jobs:
               echo "==================== archiso starting ===================="
               echo "Running: $ARCHISO_BIN -v -w /tmp/work -o /out /tmp/novaos-profile"
 
-              # 5b) Show mkarchiso help + source so we can debug the
-              #     realpath empty argument error.  NOTE: no single quotes
-              #     in comments - they terminate the outer bash -c quoting.
-              echo "----- mkarchiso --help (full) -----"
-              "$ARCHISO_BIN" -h 2>&1 || true
-              echo "----- mkarchiso _read_profile function (lines 1490-1560) -----"
-              sed -n '1490,1560p' "$ARCHISO_BIN"
-              echo "----- official archiso releng profile structure -----"
-              ls -la /usr/share/archiso/configs/releng/ 2>/dev/null || echo "(releng profile not found)"
-              ls -la /usr/share/archiso/configs/releng/airootfs/ 2>/dev/null || true
-              echo "----- releng profiledef.sh -----"
-              cat /usr/share/archiso/configs/releng/profiledef.sh 2>/dev/null || echo "(not found)"
-              echo "----- releng pacman.conf -----"
-              cat /usr/share/archiso/configs/releng/pacman.conf 2>/dev/null || echo "(not found)"
-
-              # 5c) Run mkarchiso
+              # 5b) Run mkarchiso.  profiledef.sh now sets pacman_conf="pacman.conf"
+              #     which is required by _read_profile() in mkarchiso.
               "$ARCHISO_BIN" -v -w /tmp/work -o /out /tmp/novaos-profile 2>&1 || {
                 echo "==================== archiso FAILED ===================="
                 cp -r /tmp/work /out/work-dump-$(date +%s) 2>/dev/null || true
