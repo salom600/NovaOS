@@ -115,22 +115,16 @@ jobs:
               #     produces a silent "command not found" later).
               pacman -S --noconfirm --noprogressbar archiso git reflector rsync
 
-              # 1c) Verify archiso is actually on PATH - if not, force reinstall
-              if ! command -v archiso >/dev/null 2>&1; then
-                echo "archiso not on PATH after install - forcing reinstall"
-                pacman -S --noconfirm --noprogressbar --assume-installed git archiso
-                # Last-resort: locate the binary directly
-                ARCHISO_BIN="\$(find /usr -name archiso -type f 2>/dev/null | head -1)"
-                if [[ -z "\$ARCHISO_BIN" ]]; then
-                  echo "FATAL: archiso binary not found anywhere in /usr"
-                  pacman -Ql archiso 2>/dev/null || true
-                  exit 1
-                fi
-                echo "Found archiso at: \$ARCHISO_BIN"
-                ln -sf "\$ARCHISO_BIN" /usr/local/bin/archiso
+              # 1c) Verify archiso is actually installed and on PATH.
+              #     archiso's binary lives at /usr/bin/archiso on Arch.
+              if [[ ! -x /usr/bin/archiso ]]; then
+                echo "FATAL: /usr/bin/archiso does not exist after pacman install"
+                echo "Files owned by archiso package:"
+                pacman -Ql archiso 2>/dev/null || echo "(archiso not in pacman database)"
+                exit 1
               fi
-              echo "archiso version: \$(archiso --version 2>&1 | head -1)"
-              command -v archiso
+              echo "archiso binary: $(ls -l /usr/bin/archiso)"
+              echo "archiso version: $(/usr/bin/archiso --version 2>&1 | head -1)"
 
               # 2) Refresh mirrorlist for speed (non-fatal if it times out)
               reflector --latest 30 --protocol https --sort rate \
@@ -150,7 +144,7 @@ jobs:
               # 5) Run archiso
               mkdir -p /tmp/work /out
               echo "==================== archiso starting ===================="
-              archiso -v -w /tmp/work -o /out -L NOVAOS_$(date +%Y%m) run . || {
+              /usr/bin/archiso -v -w /tmp/work -o /out -L NOVAOS_$(date +%Y%m) run . || {
                 echo "==================== archiso FAILED ===================="
                 cp -r /tmp/work /out/work-dump-$(date +%s) 2>/dev/null || true
                 exit 1
