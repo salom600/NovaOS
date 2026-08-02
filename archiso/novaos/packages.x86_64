@@ -183,7 +183,7 @@ gnome-themes-extra
 hicolor-icon-theme
 adwaita-icon-theme
 papirus-icon-theme
-tela-circle-icon-theme-git
+# tela-circle-icon-theme-git  # AUR-only - install post-boot via paru
 
 ## --- Display / color management ---
 colord
@@ -309,13 +309,13 @@ wine-gecko
 wine-mono
 wine-mono-bin
 winetricks
-proton-ge-custom
-protonup-qt
-bottles
+# proton-ge-custom  # AUR-only - install post-boot via paru
+# protonup-qt  # AUR-only - install post-boot via paru
+# bottles  # AUR-only - install post-boot via paru
 dxvk
-dxvk-mingw
+# dxvk-mingw  # AUR-only - install post-boot via paru
 vkd3d
-vkd3d-proton-mingw
+# vkd3d-proton-mingw  # AUR-only - install post-boot via paru
 lib32-vkd3d
 lib32-mesa
 lib32-vulkan-radeon
@@ -335,9 +335,9 @@ fwupd
 archlinux-appstream-data
 appstream
 appstream-qt
-paru-bin
-yay-bin
-pikaur
+# paru-bin  # AUR-only - install post-boot via paru
+# yay-bin  # AUR-only - install post-boot via paru
+# pikaur  # AUR-only - install post-boot via paru
 
 ## --- Fonts (CJK + Latin + Arabic + Cyrillic) ---
 noto-fonts
@@ -353,7 +353,7 @@ ttf-fira-mono
 ttf-fira-sans
 ttf-roboto
 ttf-ubuntu-font-family
-ttf-ms-fonts
+# ttf-ms-fonts  # AUR-only - install post-boot via paru
 ttf-carlito
 ttf-caladea
 adobe-source-code-pro-fonts
@@ -432,5 +432,5 @@ emacs
 vim
 
 ## --- NovaOS own packages (built from AUR / this repo) ---
-smart-video-wallpaper-reborn-git
+# smart-video-wallpaper-reborn-git  # AUR-only - install post-boot via paru
 # novaos-theme, novaos-store, novaos-wallpapers installed via airootfs
