@@ -406,7 +406,8 @@ ARCHISO_CMD_NOT_FOUND_RE = re.compile(
     r"(?:archiso|mkarchiso):\s*command not found|"
     r"line\s+\d+:\s*archiso:\s*command not found|"
     r"FATAL:\s+(?:/usr/bin/archiso|/usr/bin/mkarchiso)\s+does not exist|"
-    r"neither mkarchiso nor archiso binary found",
+    r"neither mkarchiso nor archiso binary found|"
+    r"ERROR:\s+Profile\s+'\S*run'\s+does not exist",
     re.IGNORECASE,
 )
 
@@ -416,8 +417,8 @@ def fix_archiso_cmd_not_found(m: re.Match, repo: Path) -> Optional[Dict]:
     if not wf.exists():
         return None
     text = _read(wf)
-    # Pattern 1: drop --needed flag
     patched = False
+    # Pattern 1: drop --needed flag
     if "--needed archiso git reflector rsync" in text:
         text = text.replace(
             "--needed archiso git reflector rsync",
@@ -433,10 +434,19 @@ def fix_archiso_cmd_not_found(m: re.Match, repo: Path) -> Optional[Dict]:
             flags=re.MULTILINE,
         )
         patched = True
+    # Pattern 3: remove 'run' subcommand from mkarchiso call
+    # mkarchiso -v -w ... -L FOO run .  ->  mkarchiso -v -w ... -L FOO .
+    if re.search(r"\bmkarchiso\s+.*?\s+run\s+\.\s*\|\|", text):
+        text = re.sub(
+            r"(\bmkarchiso\s+.*?\s-L\s+\S+)\s+run\s+\.",
+            r"\1 .",
+            text,
+        )
+        patched = True
     if patched:
         _write(wf, text)
         return {
-            "summary": "Patched archiso invocation (dropped --needed, switched to mkarchiso).",
+            "summary": "Patched archiso invocation (dropped --needed, switched to mkarchiso, removed 'run' subcommand).",
             "files":   [str(wf.relative_to(repo))],
         }
     return None

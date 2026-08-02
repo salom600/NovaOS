@@ -152,10 +152,12 @@ jobs:
               find airootfs/usr/local/bin -type f -exec chmod 0755 {} \;
               find airootfs -name "*.sh" -exec chmod 0755 {} \;
 
-              # 5) Run archiso (use the resolved binary path)
+              # 5) Run archiso (use the resolved binary path).
+              #    mkarchiso syntax: mkarchiso [options] <profile_dir>
+              #    There is NO 'run' subcommand - that was a bug.
               mkdir -p /tmp/work /out
               echo "==================== archiso starting ===================="
-              "$ARCHISO_BIN" -v -w /tmp/work -o /out -L NOVAOS_$(date +%Y%m) run . || {
+              "$ARCHISO_BIN" -v -w /tmp/work -o /out -L NOVAOS_$(date +%Y%m) . || {
                 echo "==================== archiso FAILED ===================="
                 cp -r /tmp/work /out/work-dump-$(date +%s) 2>/dev/null || true
                 exit 1
