@@ -87,10 +87,47 @@ fi
 
 if echo "$GPU_VENDORS" | grep -qi 'intel'; then
     log "Intel GPU detected - configuring i915 module options…"
-    install -m644 /dev/stdin /etc/modprobe.d/novaos-intel.conf <<'EOF'
+
+    # CRITICAL: enable_guc=3 requires GuC firmware which only exists for
+    # Gen 12+ (Tiger Lake, 2020+). On Gen 9-11 (Skylake, Kaby Lake, Coffee
+    # Lake, Ice Lake - 2015-2019), enable_guc=3 causes DRM init failure
+    # and a BLANK SCREEN at SDDM startup.
+    #
+    # Probe the Intel GPU generation via lspci + PCI device IDs.
+    # Intel Gen 12+ iGPUs have PCI device IDs starting from 0x9A (Tiger Lake)
+    # and 0x46 (Alder Lake) / 0xA7 (Raptor Lake) / 0x7D (Meteor Lake).
+    INTEL_GEN12=0
+    INTEL_PCI=$(lspci -nn | grep -iE 'vga|3d|display' | grep -i 'intel' | \
+                grep -oE '\[0x[0-9a-fA-F]{4}:[0-9a-fA-F]{4}\]' | head -1)
+    INTEL_DEV_ID=$(echo "$INTEL_PCI" | sed -n 's/.*:0x\([0-9a-fA-F]\{4\}\)]/\1/p')
+
+    if [[ -n "$INTEL_DEV_ID" ]]; then
+        INTEL_DEV_DEC=$((16#$INTEL_DEV_ID))
+        log "Intel GPU PCI device ID: 0x$INTEL_DEV_ID ($INTEL_DEV_DEC)"
+        # Tiger Lake (Gen12) starts at 0x9A00, Ice Lake (Gen11) at 0x8A00
+        if (( INTEL_DEV_DEC >= 0x9A00 )); then
+            INTEL_GEN12=1
+            log "  -> Gen 12+ detected - enabling GuC submission"
+        else
+            log "  -> Gen 11 or older - GuC disabled (would break display)"
+        fi
+    fi
+
+    if [[ "$INTEL_GEN12" == "1" ]]; then
+        install -m644 /dev/stdin /etc/modprobe.d/novaos-intel.conf <<'EOF'
+# Written by novaos-first-boot - Intel Gen 12+ (Tiger Lake and newer)
 options i915 enable_guc=3 enable_fbc=1 fastboot=1 enable_psr=1
 options i915 enable_dc=2 disable_power_well=0
 EOF
+    else
+        install -m644 /dev/stdin /etc/modprobe.d/novaos-intel.conf <<'EOF'
+# Written by novaos-first-boot - Intel Gen 11 or older (Skylake, Kaby Lake, etc.)
+# enable_guc=3 is OMITTED - GuC firmware does not exist for these generations
+# and would cause a blank screen at SDDM startup.
+options i915 enable_fbc=1 fastboot=1
+options i915 enable_dc=2 disable_power_well=0
+EOF
+    fi
     mkinitcpio -P || err "mkinitcpio failed after intel enable"
 fi
 
