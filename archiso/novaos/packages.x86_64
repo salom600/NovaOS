@@ -287,32 +287,31 @@ calligra-stage
 libreoffice-fresh
 libreoffice-fresh-sdk
 hunspell
-hunspell-en
-hunspell-ar
+hunspell-en_US
+# hunspell-ar  # AUR-only
 hunspell-fr
 hunspell-de
-hunspell-es
+# hunspell-es  # AUR-only
 hunspell-it
 hunspell-ru
-hunspell-zh
+# hunspell-zh  # AUR-only
 hyphen
 mythes
 libmythes
-stirling-pdf
+# stirling-pdf  # AUR-only
 pdfarranger
-masterpdfeditor
+# masterpdfeditor  # AUR-only
 xournalpp
 
 ## --- Windows compatibility ---
 wine
 wine-gecko
 wine-mono
-wine-mono-bin
 winetricks
 # proton-ge-custom  # AUR-only - install post-boot via paru
 # protonup-qt  # AUR-only - install post-boot via paru
 # bottles  # AUR-only - install post-boot via paru
-dxvk
+# dxvk  # AUR-only (dxvk-mingw also AUR)
 # dxvk-mingw  # AUR-only - install post-boot via paru
 vkd3d
 # vkd3d-proton-mingw  # AUR-only - install post-boot via paru
@@ -329,7 +328,7 @@ lib32-mangohud
 
 ## --- Package managers / store backend ---
 discover
-discover-backend-flatpak
+# discover-backend-flatpak  # now bundled in discover
 flatpak
 fwupd
 archlinux-appstream-data
@@ -344,7 +343,7 @@ noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
 noto-fonts-extra
-noto-fonts-arabic
+# noto-fonts-arabic  # now part of noto-fonts
 ttf-dejavu
 ttf-liberation
 ttf-bitstream-vera
@@ -406,7 +405,7 @@ edk2-ovmf
 swtpm
 dnsmasq
 ebtables
-bridge-utils
+# bridge-utils  # deprecated, use iproute2
 openbsd-netcat
 strace
 ltrace
@@ -418,7 +417,7 @@ btop
 nvtop
 glances
 iotop
-ifstat
+# ifstat  # AUR-only, use bmon instead
 nethogs
 bat
 eza
