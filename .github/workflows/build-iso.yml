@@ -172,6 +172,17 @@ jobs:
               mkdir -p /tmp/work /out
               echo "==================== archiso starting ===================="
               echo "Running: $ARCHISO_BIN -v -w /tmp/work -o /out /tmp/novaos-profile"
+
+              # 5b) Show mkarchiso version + first 80 lines of source so we
+              #     can debug the 'realpath: empty argument' error.
+              echo "----- mkarchiso --help -----"
+              "$ARCHISO_BIN" -h 2>&1 | head -30 || true
+              echo "----- mkarchiso source (first 80 lines) -----"
+              head -80 "$ARCHISO_BIN"
+              echo "----- grep realpath in mkarchiso -----"
+              grep -n "realpath" "$ARCHISO_BIN" || echo "(no realpath calls in mkarchiso)"
+
+              # 5c) Run mkarchiso with bash -x to trace execution
               "$ARCHISO_BIN" -v -w /tmp/work -o /out /tmp/novaos-profile 2>&1 || {
                 echo "==================== archiso FAILED ===================="
                 cp -r /tmp/work /out/work-dump-$(date +%s) 2>/dev/null || true
