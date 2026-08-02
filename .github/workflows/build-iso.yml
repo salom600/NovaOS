@@ -110,21 +110,32 @@ jobs:
               echo "Server = https://geo.mirror.pkgbuild.com/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
               pacman -Sy --noconfirm --noprogressbar archlinux-keyring
 
-              # 1b) Install archiso WITHOUT --needed (the flag makes pacman skip
-              #     the package itself when only its deps are missing, which
-              #     produces a silent "command not found" later).
+              # 1b) Install archiso. The PACKAGE is called "archiso" but the
+              #     BINARY it ships is /usr/bin/mkarchiso (NOT /usr/bin/archiso).
+              #     This has been the source of every "command not found" so far.
               pacman -S --noconfirm --noprogressbar archiso git reflector rsync
 
-              # 1c) Verify archiso is actually installed and on PATH.
-              #     archiso's binary lives at /usr/bin/archiso on Arch.
-              if [[ ! -x /usr/bin/archiso ]]; then
-                echo "FATAL: /usr/bin/archiso does not exist after pacman install"
-                echo "Files owned by archiso package:"
-                pacman -Ql archiso 2>/dev/null || echo "(archiso not in pacman database)"
+              # 1c) Locate the archiso binary. Try mkarchiso first (the real name),
+              #     fall back to archiso (older versions), then a filesystem search.
+              ARCHISO_BIN=""
+              for candidate in /usr/bin/mkarchiso /usr/bin/archiso /usr/local/bin/mkarchiso; do
+                if [[ -x "$candidate" ]]; then
+                  ARCHISO_BIN="$candidate"
+                  break
+                fi
+              done
+              if [[ -z "$ARCHISO_BIN" ]]; then
+                echo "FATAL: neither mkarchiso nor archiso binary found"
+                echo "--- pacman database for archiso ---"
+                pacman -Q archiso 2>&1 || echo "(archiso not in pacman -Q)"
+                echo "--- pacman -Ql archiso ---"
+                pacman -Ql archiso 2>&1 | head -30 || echo "(pacman -Ql failed)"
+                echo "--- find /usr -name mkarchiso -o -name archiso ---"
+                find /usr -name "mkarchiso" -o -name "archiso" 2>/dev/null
                 exit 1
               fi
-              echo "archiso binary: $(ls -l /usr/bin/archiso)"
-              echo "archiso version: $(/usr/bin/archiso --version 2>&1 | head -1)"
+              echo "archiso binary: $ARCHISO_BIN"
+              echo "archiso version: $($ARCHISO_BIN --version 2>&1 | head -1)"
 
               # 2) Refresh mirrorlist for speed (non-fatal if it times out)
               reflector --latest 30 --protocol https --sort rate \
@@ -141,10 +152,10 @@ jobs:
               find airootfs/usr/local/bin -type f -exec chmod 0755 {} \;
               find airootfs -name "*.sh" -exec chmod 0755 {} \;
 
-              # 5) Run archiso
+              # 5) Run archiso (use the resolved binary path)
               mkdir -p /tmp/work /out
               echo "==================== archiso starting ===================="
-              /usr/bin/archiso -v -w /tmp/work -o /out -L NOVAOS_$(date +%Y%m) run . || {
+              "$ARCHISO_BIN" -v -w /tmp/work -o /out -L NOVAOS_$(date +%Y%m) run . || {
                 echo "==================== archiso FAILED ===================="
                 cp -r /tmp/work /out/work-dump-$(date +%s) 2>/dev/null || true
                 exit 1

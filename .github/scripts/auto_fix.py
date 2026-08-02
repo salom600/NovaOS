@@ -404,7 +404,9 @@ def fix_archiso_bootmode(m: re.Match, repo: Path) -> Optional[Dict]:
 # Rule 13: archiso command not found -> drop --needed flag from pacman install
 ARCHISO_CMD_NOT_FOUND_RE = re.compile(
     r"(?:archiso|mkarchiso):\s*command not found|"
-    r"line\s+\d+:\s*archiso:\s*command not found",
+    r"line\s+\d+:\s*archiso:\s*command not found|"
+    r"FATAL:\s+(?:/usr/bin/archiso|/usr/bin/mkarchiso)\s+does not exist|"
+    r"neither mkarchiso nor archiso binary found",
     re.IGNORECASE,
 )
 
@@ -414,21 +416,27 @@ def fix_archiso_cmd_not_found(m: re.Match, repo: Path) -> Optional[Dict]:
     if not wf.exists():
         return None
     text = _read(wf)
-    # Drop the --needed flag from the archiso install line
+    # Pattern 1: drop --needed flag
+    patched = False
     if "--needed archiso git reflector rsync" in text:
-        new_text = text.replace(
+        text = text.replace(
             "--needed archiso git reflector rsync",
             "archiso git reflector rsync  # no --needed: would skip archiso itself",
         )
-        # Also add a verification block right after the install line
-        new_text = new_text.replace(
-            "pacman -S --noconfirm --noprogressbar archiso git reflector rsync  # no --needed: would skip archiso itself\n",
-            "pacman -S --noconfirm --noprogressbar archiso git reflector rsync  # no --needed: would skip archiso itself\n"
-            "              command -v archiso || pacman -S --noconfirm archiso\n",
+        patched = True
+    # Pattern 2: replace bare `archiso -v` calls with mkarchiso
+    if re.search(r"^\s*archiso\s+-v\s+-w", text, re.MULTILINE):
+        text = re.sub(
+            r"^\s*archiso\s+-v\s+-w",
+            "              mkarchiso -v -w",
+            text,
+            flags=re.MULTILINE,
         )
-        _write(wf, new_text)
+        patched = True
+    if patched:
+        _write(wf, text)
         return {
-            "summary": "Dropped --needed flag from archiso install (was causing silent skip).",
+            "summary": "Patched archiso invocation (dropped --needed, switched to mkarchiso).",
             "files":   [str(wf.relative_to(repo))],
         }
     return None
