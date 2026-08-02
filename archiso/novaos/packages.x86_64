@@ -30,7 +30,7 @@ squashfs-tools
 grub
 efibootmgr
 syslinux
-systemd-boot
+# systemd-boot  # part of systemd package
 mtools
 
 ## --- Kernel modules / drivers (broad HW) ---
@@ -178,7 +178,7 @@ qt6-webview
 gtk3
 gtk4
 # gtk-engines  # deprecated
-gtk-engine-murrine
+# gtk-engine-murrine  # may be AUR-only
 gnome-themes-extra
 hicolor-icon-theme
 adwaita-icon-theme
