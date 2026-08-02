@@ -30,7 +30,8 @@ squashfs-tools
 grub
 efibootmgr
 syslinux
-systemd-boot
+# REMOVED-AUTO: target not found in repo
+#systemd-boot
 mtools
 
 ## --- Kernel modules / drivers (broad HW) ---
