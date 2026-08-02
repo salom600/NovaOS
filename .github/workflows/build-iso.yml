@@ -176,15 +176,17 @@ jobs:
               # 5b) Show mkarchiso help + source so we can debug the
               #     realpath empty argument error.  NOTE: no single quotes
               #     in comments - they terminate the outer bash -c quoting.
-              echo "----- mkarchiso --help -----"
-              "$ARCHISO_BIN" -h 2>&1 | head -30 || true
-              echo "----- mkarchiso source (first 80 lines) -----"
-              head -80 "$ARCHISO_BIN"
-              echo "----- grep realpath in mkarchiso -----"
-              grep -n "realpath" "$ARCHISO_BIN" || echo "(no realpath calls in mkarchiso)"
+              echo "----- mkarchiso --help (full) -----"
+              "$ARCHISO_BIN" -h 2>&1 || true
+              echo "----- mkarchiso source lines 1540-1560 -----"
+              sed -n '1540,1560p' "$ARCHISO_BIN"
+              echo "----- mkarchiso source lines 1600-1620 -----"
+              sed -n '1600,1620p' "$ARCHISO_BIN"
+              echo "----- mkarchiso source lines 1890-1910 -----"
+              sed -n '1890,1910p' "$ARCHISO_BIN"
 
-              # 5c) Run mkarchiso
-              "$ARCHISO_BIN" -v -w /tmp/work -o /out /tmp/novaos-profile 2>&1 || {
+              # 5c) Run mkarchiso with -C pointing at our pacman.conf
+              "$ARCHISO_BIN" -v -w /tmp/work -o /out -C /tmp/novaos-profile/pacman.conf /tmp/novaos-profile 2>&1 || {
                 echo "==================== archiso FAILED ===================="
                 cp -r /tmp/work /out/work-dump-$(date +%s) 2>/dev/null || true
                 exit 1
