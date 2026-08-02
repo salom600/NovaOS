@@ -199,8 +199,8 @@ pipewire-audio
 pipewire-v4l2
 pipewire-zeroconf
 wireplumber
-pulseaudio-alsa
-pulseaudio-bluetooth
+# pulseaudio-alsa  # replaced by pipewire-pulse
+# pulseaudio-bluetooth  # replaced by pipewire-pulse
 pulsemixer
 pavucontrol-qt
 libpulse
@@ -433,3 +433,7 @@ vim
 ## --- NovaOS own packages (built from AUR / this repo) ---
 # smart-video-wallpaper-reborn-git  # AUR-only - install post-boot via paru
 # novaos-theme, novaos-store, novaos-wallpapers installed via airootfs
+
+## --- Tesseract OCR data (pre-selected to avoid interactive prompt) ---
+tesseract-data-eng
+tesseract
