@@ -59,8 +59,8 @@ vulkan-nouveau
 libva-mesa-driver
 libva-intel-driver
 intel-media-driver
-mesa-vdpau
-nvidia-dkms            # Latest Nvidia (Ampere, Ada, Blackwell)
+# mesa-vdpau  # now part of mesa
+nvidia-dkms
 nvidia-utils
 lib32-nvidia-utils
 nvidia-settings
@@ -92,8 +92,8 @@ xorg-xlsfonts
 xorg-xrefresh
 wayland
 wayland-protocols
-xwayland
-xwaylandvideobridge
+xorg-xwayland
+# xwaylandvideobridge  # AUR-only
 seatd
 
 ## --- KDE Plasma 6 desktop ---
@@ -110,7 +110,7 @@ kde-gtk-config
 kdeconnect
 kdeplasma-addons
 kwin
-kwin-effects
+# kwin-effects  # does not exist as separate pkg
 kwayland
 kio
 kio-extras
@@ -130,10 +130,10 @@ kwalletmanager
 kwallet-pam
 kscreen
 kscreenlocker
-ksysguard
+# ksysguard  # renamed to plasma-systemmonitor
 ksystemlog
 kwrited
-khotkeys
+# khotkeys  # deprecated in Plasma 6
 kmenuedit
 milou
 oxygen
@@ -151,7 +151,7 @@ kpipewire
 xdg-desktop-portal-kde
 xdg-desktop-portal
 xdg-desktop-portal-gtk
-kwallet-query
+# kwallet-query  # part of kwalletmanager
 kglobalacceld
 plasma5support
 
@@ -177,7 +177,7 @@ qt6-websockets
 qt6-webview
 gtk3
 gtk4
-gtk-engines
+# gtk-engines  # deprecated
 gtk-engine-murrine
 gnome-themes-extra
 hicolor-icon-theme
@@ -188,7 +188,7 @@ papirus-icon-theme
 ## --- Display / color management ---
 colord
 colord-kde
-icc-profiles
+# icc-profiles  # AUR-only
 
 ## --- Audio / Bluetooth media ---
 pipewire
@@ -224,7 +224,7 @@ simple-scan
 gvfs
 gvfs-afc
 gvfs-goa
-gvfs-google
+# gvfs-google  # does not exist
 gvfs-gphoto2
 gvfs-mtp
 gvfs-nfs
@@ -236,7 +236,7 @@ gnome-disk-utility
 
 ## --- Network tools ---
 firefox
-firefox-i18n
+# firefox-i18n  # needs language suffix
 firefox-ublock-origin
 transmission-qt
 filezilla
@@ -248,14 +248,14 @@ nftables
 ufw
 firewalld
 openssh
-openssh-askpass
+# openssh-askpass  # use x11-ssh-askpass
 rsync
 wget
 curl
 git
 git-lfs
 gitg
-gh
+github-cli
 
 ## --- Media ---
 vlc
@@ -274,16 +274,16 @@ inkscape
 kcolorchooser
 kolourpaint
 krita
- spectacle
+spectacle
 okular
 gwenview
 imagemagick
 
 ## --- Office / docs ---
 calligra
-calligra-sheets
-calligra-words
-calligra-stage
+# calligra-sheets  # part of calligra
+# calligra-words  # part of calligra
+# calligra-stage  # part of calligra
 libreoffice-fresh
 libreoffice-fresh-sdk
 hunspell
