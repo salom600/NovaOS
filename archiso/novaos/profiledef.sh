@@ -11,7 +11,9 @@ iso_publisher="NovaOS Project <https://github.com/salom600/NovaOS>"
 iso_application="NovaOS Live/Install Media"
 iso_version="$(date +%Y.%m.%d)"
 iso_install_dir="novaos"
-iso_features="${iso_features} uefi amd64 intel64"
+# NOTE: iso_features is optional in modern archiso - do not append to an
+# unbound variable, that breaks under `set -u` (which mkarchiso uses).
+iso_features="uefi amd64 intel64"
 bootmodes=('bios.syslinux.mbr' 'bios.syslinux.eltorito'
            'uefi-x64.systemd-boot.esp'
            'uefi-x64.systemd-boot.eltorito')

@@ -504,6 +504,38 @@ def fix_docker_perm(m: re.Match, repo: Path) -> Optional[Dict]:
     return None
 
 
+# Rule 16: profiledef.sh unbound variable (iso_features) -> initialise first
+PROFILEDEF_UNBOUND_RE = re.compile(
+    r"profiledef\.sh:\s+line\s+\d+:\s+(\w+):\s+unbound variable",
+    re.IGNORECASE,
+)
+
+
+def fix_profiledef_unbound(m: re.Match, repo: Path) -> Optional[Dict]:
+    varname = m.group(1)
+    pd = repo / "archiso/novaos/profiledef.sh"
+    if not pd.exists():
+        return None
+    text = _read(pd)
+    # Pattern: iso_features="${iso_features} foo" -> iso_features="foo"
+    # Build pattern WITHOUT f-string to avoid brace escaping headaches
+    pat = re.compile(
+        r'^(\s*)' + re.escape(varname) + r'="\$\{' + re.escape(varname) + r'\}\s+([^"]*)"\s*$',
+        re.MULTILINE,
+    )
+    if pat.search(text):
+        new_text = pat.sub(
+            r'\1' + varname + r'="\2"  # initialise (was append to unbound var)',
+            text,
+        )
+        _write(pd, new_text)
+        return {
+            "summary": f"Initialised `{varname}` in profiledef.sh (was appending to unbound variable under `set -u`).",
+            "files":   [str(pd.relative_to(repo))],
+        }
+    return None
+
+
 # Catalog
 RULES: List[Tuple[str, re.Pattern, callable]] = [
     ("package_not_found",     PKG_NOT_FOUND_RE,    fix_pkg_not_found),
@@ -521,6 +553,7 @@ RULES: List[Tuple[str, re.Pattern, callable]] = [
     ("archiso_cmd_not_found", ARCHISO_CMD_NOT_FOUND_RE, fix_archiso_cmd_not_found),
     ("pacman_db_locked",      PACMAN_LOCK_RE,      fix_pacman_lock),
     ("docker_permission",     DOCKER_PERM_RE,      fix_docker_perm),
+    ("profiledef_unbound",    PROFILEDEF_UNBOUND_RE, fix_profiledef_unbound),
 ]
 
 
