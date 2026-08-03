@@ -6,7 +6,7 @@
 #
 
 iso_name="NovaOS"
-iso_label="NOVAOS_$(date +%Y%m)"
+iso_label="NOVAOS_ISO"
 iso_publisher="NovaOS Project <https://github.com/salom600/NovaOS>"
 iso_application="NovaOS Live/Install Media"
 iso_version="$(date +%Y.%m.%d)"
