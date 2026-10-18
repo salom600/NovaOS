@@ -181,7 +181,8 @@ papirus-icon-theme
 
 ## --- Display / color management ---
 colord
-colord-kde
+# REMOVED-AUTO: target not found in repo
+#colord-kde
 
 ## --- Audio / Bluetooth media ---
 pipewire
